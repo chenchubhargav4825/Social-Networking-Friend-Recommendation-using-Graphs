@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Network Recommendation System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Social Network Recommendation System</h1>
+    <p>This is a basic client-side template site. Select a user below to calculate friend recommendations instantly in the browser.</p>
+    
+    <hr>
+
+    <h3>Select User Profile:</h3>
+    <div>
+        <select id="userSelect">
+            <option value="rahul">Rahul Sharma (Hyderabad)</option>
+            <option value="priya">Priya Reddy (Hyderabad)</option>
+            <option value="arjun">Arjun Kumar (Bangalore)</option>
+            <option value="sneha">Sneha Patel (Hyderabad)</option>
+            <option value="kiran">Kiran Verma (Chennai)</option>
+            <option value="neha">Neha Singh (Bangalore)</option>
+        </select>
+        <button onclick="getRecommendations()">Get Recommendations</button>
+    </div>
+
+    <hr>
+
+    <h3>Recommendations Result:</h3>
+    <div id="results">
+        <p>No query submitted yet. Choose a user profile and click "Get Recommendations".</p>
+    </div>
+
+    <script>
+        // Predefined User Database
+        const users = [
+            { id: "rahul", name: "Rahul Sharma", skills: ["Java", "Python"], city: "Hyderabad", friends: ["priya", "arjun", "neha"] },
+            { id: "priya", name: "Priya Reddy", skills: ["Python", "AI"], city: "Hyderabad", friends: ["rahul", "sneha", "kiran"] },
+            { id: "arjun", name: "Arjun Kumar", skills: ["JavaScript", "Web Development"], city: "Bangalore", friends: ["rahul", "neha"] },
+            { id: "sneha", name: "Sneha Patel", skills: ["AI", "Machine Learning", "Python"], city: "Hyderabad", friends: ["priya", "kiran"] },
+            { id: "kiran", name: "Kiran Verma", skills: ["Python", "Data Science"], city: "Chennai", friends: ["priya", "sneha"] },
+            { id: "neha", name: "Neha Singh", skills: ["Java", "Data Science"], city: "Bangalore", friends: ["rahul", "arjun"] }
+        ];
+
+        function getRecommendations() {
+            const userId = document.getElementById('userSelect').value;
+            const resultsDiv = document.getElementById('results');
+            
+            // Calculate recommendations using the formula:
+            // Score = Mutual Friends * 60 + Common Skills * 20 + Same City * 20
+            const recommendations = calculateRecommendations(userId);
+            
+            if (recommendations.length === 0) {
+                resultsDiv.innerHTML = "<p>No recommendations available.</p>";
+                return;
+            }
+
+            // Render results
+            let html = "<ul>";
+            recommendations.forEach(rec => {
+                html += "<li>";
+                html += "<strong>" + rec.name + "</strong><br>";
+                html += "Mutual Friends: " + rec.mutualCount + "<br>";
+                html += "Common Skills: " + rec.commonSkills + "<br>";
+                html += "Same City Match: " + (rec.sameCity ? "Yes" : "No") + "<br>";
+                html += "<strong>Recommendation Score: " + rec.score + "</strong>";
+                html += "</li><br>";
+            });
+            html += "</ul>";
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        function calculateRecommendations(sourceId) {
+            const source = users.find(u => u.id === sourceId);
+            if (!source) return [];
+
+            const list = [];
+            users.forEach(target => {
+                // Do not recommend the active user or existing friends
+                if (target.id === source.id || source.friends.includes(target.id)) return;
+
+                // 1. Calculate Mutual Friends
+                const mutual = source.friends.filter(f => target.friends.includes(f));
+                
+                // 2. Calculate Common Skills
+                const commonSkills = source.skills.filter(s => target.skills.includes(s));
+
+                // 3. Same City Match
+                const sameCity = source.city.toLowerCase() === target.city.toLowerCase();
+
+                // Calculate Score
+                const score = (mutual.length * 60) + (commonSkills.length * 20) + (sameCity ? 20 : 0);
+                const skillStr = commonSkills.length > 0 ? commonSkills.join(", ") : "None";
+
+                list.push({
+                    name: target.name,
+                    mutualCount: mutual.length,
+                    commonSkills: skillStr,
+                    sameCity: sameCity,
+                    score: score
+                });
+            });
+
+            // Sort by score descending
+            return list.sort((a, b) => b.score - a.score);
+        }
+    </script>
+</body>
+</html>
